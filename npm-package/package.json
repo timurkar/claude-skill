@@ -1,0 +1,35 @@
+{
+  "name": "@chatium/claude-skill",
+  "version": "0.1.0",
+  "description": "Chatium sync skill for Claude Code — installs a slash command that syncs your local folder with a Chatium account",
+  "bin": {
+    "chatium-claude-skill": "bin/install.js"
+  },
+  "files": [
+    "bin/",
+    "README.md"
+  ],
+  "scripts": {
+    "install-skill": "node bin/install.js"
+  },
+  "keywords": [
+    "chatium",
+    "claude-code",
+    "claude",
+    "skill",
+    "sync",
+    "cli"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/timurkar/claude-skill.git"
+  },
+  "bugs": {
+    "url": "https://github.com/timurkar/claude-skill/issues"
+  },
+  "homepage": "https://github.com/timurkar/claude-skill#readme",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  }
+}
