@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 /**
- * Installs the chatium-sync Claude Code skill into ~/.claude/skills/chatium-sync/
- * Downloads skill files from GitHub at install time.
+ * Installs the chatium-sync skill for AI coding agents (Claude Code, Codex CLI).
+ * Downloads skill files from GitHub at install time and copies them into each
+ * agent's skills directory: ~/.claude/skills/chatium-sync and/or ~/.codex/skills/chatium-sync.
  */
 
 const fs = require('fs');
@@ -11,7 +12,11 @@ const https = require('https');
 
 const REPO = 'timurkar/claude-skill';
 const BRANCH = process.env.CHATIUM_SKILL_BRANCH || 'main';
-const SKILL_DIR = path.join(os.homedir(), '.claude', 'skills', 'chatium-sync');
+
+const AGENTS = [
+  { name: 'Claude Code', home: path.join(os.homedir(), '.claude'), restart: 'Restart Claude Code' },
+  { name: 'Codex CLI', home: path.join(os.homedir(), '.codex'), restart: 'Restart Codex' },
+];
 
 const FILES = [
   { name: 'SKILL.md', executable: false },
@@ -41,7 +46,7 @@ function err(msg) { console.error(`${c.red}[chatium-skill]${c.reset} ${msg}`); }
 
 function download(url) {
   return new Promise((resolve, reject) => {
-    const req = https.get(url, { headers: { 'User-Agent': 'chatium-claude-skill-installer' } }, (res) => {
+    const req = https.get(url, { headers: { 'User-Agent': 'chatium-skill-installer' } }, (res) => {
       // Handle redirects
       if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
         res.resume();
@@ -61,46 +66,43 @@ function download(url) {
 }
 
 async function main() {
-  log(`Installing Chatium Sync skill to ${SKILL_DIR}`);
+  // Install into every agent whose home directory exists; default to Claude Code if none found.
+  let targets = AGENTS.filter((a) => fs.existsSync(a.home));
+  if (targets.length === 0) {
+    warn('Neither ~/.claude nor ~/.codex found — installing for Claude Code by default.');
+    targets = [AGENTS[0]];
+  }
+
   log(`Downloading from github.com/${REPO}@${BRANCH}`);
-
-  // Ensure skill dir exists
-  fs.mkdirSync(SKILL_DIR, { recursive: true });
-
-  let succeeded = 0;
-  let failed = 0;
-
+  const downloaded = [];
   for (const file of FILES) {
     const url = `https://raw.githubusercontent.com/${REPO}/${BRANCH}/${file.name}`;
-    const target = path.join(SKILL_DIR, file.name);
-    try {
-      const data = await download(url);
-      fs.writeFileSync(target, data);
-      if (file.executable) {
-        try { fs.chmodSync(target, 0o755); } catch (_) {}
-      }
-      ok(`  ${file.name} (${data.length} bytes)`);
-      succeeded++;
-    } catch (e) {
-      err(`  Failed: ${file.name} — ${e.message}`);
-      failed++;
-    }
+    const data = await download(url);
+    downloaded.push({ ...file, data });
+    ok(`  ${file.name} (${data.length} bytes)`);
   }
 
   console.log('');
-  if (failed === 0) {
-    ok(`Skill installed: ${succeeded} files written to ${SKILL_DIR}`);
-    console.log('');
-    console.log(`${c.dim}Restart Claude Code, then use /chatium-sync to sync your project.${c.reset}`);
-    console.log('');
-    console.log(`${c.dim}Quick start:${c.reset}`);
-    console.log(`  1. cd into your Chatium project folder`);
-    console.log(`  2. /chatium-sync init <account> <token>`);
-    console.log(`  3. /chatium-sync sync`);
-  } else {
-    err(`Install completed with errors: ${succeeded} ok, ${failed} failed`);
-    process.exit(1);
+  for (const agent of targets) {
+    const skillDir = path.join(agent.home, 'skills', 'chatium-sync');
+    fs.mkdirSync(skillDir, { recursive: true });
+    for (const file of downloaded) {
+      const target = path.join(skillDir, file.name);
+      fs.writeFileSync(target, file.data);
+      if (file.executable) {
+        try { fs.chmodSync(target, 0o755); } catch (_) {}
+      }
+    }
+    ok(`${agent.name}: skill installed to ${skillDir}`);
   }
+
+  console.log('');
+  console.log(`${c.dim}${targets.map((t) => t.restart).join(' / ')}, then the chatium-sync skill is available.${c.reset}`);
+  console.log('');
+  console.log(`${c.dim}Quick start:${c.reset}`);
+  console.log(`  1. cd into your Chatium project folder`);
+  console.log(`  2. Ask the agent to connect the folder to your Chatium account`);
+  console.log(`     (in Claude Code: /chatium-sync init <account> <token>)`);
 }
 
 main().catch((e) => {

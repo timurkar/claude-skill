@@ -1,9 +1,9 @@
 {
-  "name": "@chatium/claude-skill",
+  "name": "@chatium/skill",
   "version": "0.1.0",
-  "description": "Chatium sync skill for Claude Code — installs a slash command that syncs your local folder with a Chatium account",
+  "description": "Chatium sync skill for AI coding agents (Claude Code, Codex CLI) — installs a skill that syncs your local folder with a Chatium account",
   "bin": {
-    "chatium-claude-skill": "bin/install.js"
+    "chatium-skill": "bin/install.js"
   },
   "files": [
     "bin/",
@@ -15,10 +15,12 @@
   "keywords": [
     "chatium",
     "claude-code",
+    "codex",
     "claude",
     "skill",
     "sync",
-    "cli"
+    "cli",
+    "agent"
   ],
   "repository": {
     "type": "git",

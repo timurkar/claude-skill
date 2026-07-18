@@ -1,22 +1,25 @@
-# @chatium/claude-skill
+# @chatium/skill
 
-Installs the **Chatium Sync** skill for [Claude Code](https://claude.com/claude-code) — a slash command that synchronizes your local folder with a Chatium account.
+Installs the **Chatium Sync** skill for AI coding agents — [Claude Code](https://claude.com/claude-code) and [Codex CLI](https://developers.openai.com/codex). The skill syncs your local folder with a Chatium account: pull, upload, status, static files, and more.
 
 ## Install
 
 ```bash
-npx @chatium/claude-skill
+npx @chatium/skill
 ```
 
 Or globally:
 
 ```bash
-npm install -g @chatium/claude-skill
+npm install -g @chatium/skill
 ```
 
-This downloads the skill files from [github.com/timurkar/claude-skill](https://github.com/timurkar/claude-skill) into `~/.claude/skills/chatium-sync/`.
+The installer downloads the skill files from [github.com/timurkar/claude-skill](https://github.com/timurkar/claude-skill) and installs them for every agent found on your machine:
 
-After install, **restart Claude Code** — `/chatium-sync` will appear as a slash command.
+- Claude Code → `~/.claude/skills/chatium-sync/`
+- Codex CLI → `~/.codex/skills/chatium-sync/`
+
+After install, **restart your agent** — the `chatium-sync` skill activates automatically (in Claude Code it is also available as the `/chatium-sync` slash command).
 
 ## Quick start
 
@@ -24,7 +27,8 @@ After install, **restart Claude Code** — `/chatium-sync` will appear as a slas
 # 1. cd into your Chatium project folder
 cd ~/projects/my-chatium-app
 
-# 2. In Claude Code:
+# 2. Ask the agent to connect the folder to your Chatium account,
+#    or in Claude Code:
 /chatium-sync init <account> <token>
 /chatium-sync pull --force
 ```
@@ -35,7 +39,7 @@ The server is always the source of truth: the local folder is a working cache fo
 
 ## What it includes
 
-- `SKILL.md` — Claude Code skill definition (`/chatium-sync` command)
+- `SKILL.md` — skill definition (SKILL.md standard, works in Claude Code and Codex CLI)
 - `chatium-sync.sh` — sync engine (init, pull, push, sync, status, upload, upload-static, typings, delete, rename)
 - Documentation modules: `coding.md`, `heap.md`, `heap-filter.md`, `auth.md`, `routing.md`, `storage.md`
 
@@ -64,7 +68,7 @@ The server is always the source of truth: the local folder is a working cache fo
 Install from a different branch:
 
 ```bash
-CHATIUM_SKILL_BRANCH=dev npx @chatium/claude-skill
+CHATIUM_SKILL_BRANCH=dev npx @chatium/skill
 ```
 
 ## License

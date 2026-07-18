@@ -1,16 +1,16 @@
 # Chatium Sync — Claude Code Skill
 
-A [Claude Code](https://claude.com/claude-code) skill that synchronizes a local folder with a [Chatium](https://chatium.com) account. Ported from the official VSCode chatium-sync extension.
+A skill for AI coding agents — [Claude Code](https://claude.com/claude-code) and [Codex CLI](https://developers.openai.com/codex) — that synchronizes a local folder with a [Chatium](https://chatium.com) account. Ported from the official VSCode chatium-sync extension.
 
 ## Install
 
 The easiest way is via npm:
 
 ```bash
-npx @chatium/claude-skill
+npx @chatium/skill
 ```
 
-This downloads the skill files into `~/.claude/skills/chatium-sync/`. Restart Claude Code → `/chatium-sync` will appear as a slash command.
+This downloads the skill files into `~/.claude/skills/chatium-sync/` (Claude Code) and `~/.codex/skills/chatium-sync/` (Codex CLI) — whichever agents are present. Restart the agent → the `chatium-sync` skill is active (in Claude Code also as the `/chatium-sync` slash command).
 
 ### Manual install
 
