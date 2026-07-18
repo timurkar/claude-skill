@@ -12,7 +12,7 @@ Attach schemas and handler with chain methods:
 
 Simple form `app.get('/', handler)` / `app.post('/', handler)` is also allowed, but when a route has query params or body, prefer the schema-based chain style.
 
-No other methods available.
+These are the route builder methods for API routes and pages. (For deferred/background tasks there is also `app.job` — see the jobs topic.)
 
 ## Core Constraints
 - Only one route is allowed per file.

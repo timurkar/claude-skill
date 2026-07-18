@@ -27,10 +27,12 @@ chmod +x ~/.claude/skills/chatium-sync/chatium-sync.sh
 ```
 # In Claude Code, from your Chatium project folder:
 /chatium-sync init <account> <token>
-/chatium-sync sync
+/chatium-sync pull --force
 ```
 
-Get your API token at `https://<your-account>/s/login/extension/token`.
+Get your API token at `https://<your-account>/s/login/external-tool/token`.
+
+The server is always the source of truth: the local folder is a working cache for searching and editing. The skill refreshes it with `pull --force` and uploads each changed file back with `upload` right after editing.
 
 ## Commands
 

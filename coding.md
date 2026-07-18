@@ -2,13 +2,9 @@
 
 The Chatium platform lets you write TypeScript code and run it on the Chatium backend. The platform is highly opinionated and feels similar to Node.js in many ways. However, there is no real Node.js runtime, so standard built-in Node.js modules are not available.
 
-Before start writing code - say to user that you read this text
-
 ## Coding standards
 
 Use 2 spaces for indentation.
-
-When the `collect-current-build-errors` tool is available in your environment, use it to obtain the current workspace build or typecheck state instead of guessing from stale context.
 
 Follow this example when you write Vue single-file components:
 
@@ -45,6 +41,15 @@ There is a global variable `ctx`: the request context. If an example passes it i
 The current working directory is `/`. Always use relative paths.
 
 In server-side code (`app.get`, `app.post`), do not use `setTimeout`, `setInterval`, `setImmediate`, `process.nextTick`, or similar APIs.
+
+**To run server-side code after a delay (a deferred / scheduled task), use a JOB — never `setTimeout`.** Define a job, then schedule it with a delay from a route handler:
+```ts
+// jobs/<name>.ts (or inline) — define the job handler
+export const myJob = app.job('/my-job', async (ctx, params) => { /* e.g. await Table.create(ctx, {...}) */ })
+// from a route handler — schedule it to run later (params passed to the handler):
+const taskId = await myJob.scheduleJobAfter(ctx, 5, 'minutes', { someId: x })  // runs the handler ~5 min later
+```
+Signature: `<job>.scheduleJobAfter(ctx, amount, unit, params)` (e.g. unit `'minutes'`). Returns a task id.
 
 ## Vue.js
 

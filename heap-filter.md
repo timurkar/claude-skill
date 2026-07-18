@@ -68,6 +68,23 @@ export const apiProductCardRoute = app.get('/')
   })
 </example>
 
+<example filename="/page/ProductsList.vue" description="Calling GET routes via .run(ctx) on the client — no fetch, no websockets">
+import { apiProductsListRoute, apiProductCardRoute } from '../api/products/list'
+
+async function loadAll() {
+  // GET — just .run(ctx). No second argument.
+  const products = await apiProductsListRoute.run(ctx)
+  return products
+}
+
+async function loadOne(id: string) {
+  // GET with query — chain .query() then .run(ctx).
+  return await apiProductCardRoute.query({ id }).run(ctx)
+}
+</example>
+
+**Important:** `.run(ctx)` works for BOTH GET and POST routes — what differs is whether you pass a body. NEVER use `fetch()`, `XMLHttpRequest`, `axios`, or `new WebSocket()` to call your own backend. Always import the `RouteRef` and call `.run(ctx)` / `.query(...).run(ctx)` / `.run(ctx, body)`.
+
 
 <example filename="api/products/create.ts" description="Create data">
 export const apiProductsCreateRoute = app.post('/')
@@ -145,19 +162,18 @@ async function deleteHandler() {
 
 ### Working with Money (MoneyKind type)
 
-<example fileName="tables/items.table">
-{
-  "name": "items",
-  "title": "Items",
-  "description": "Table of items",
-  "fields": [
-    {
-      "name": "price",
-      "kind": "MoneyKind",
-      "title": "Price"
-    }
-  ]
-}
+<example fileName="tables/items.table.ts">
+import { Heap } from '@app/heap'
+
+export const ItemsTable = Heap.Table(
+  't_items_K9Pq',
+  {
+    price: Heap.Optional(Heap.Money({ customMeta: { title: 'Price' } })),
+  },
+  { customMeta: { title: 'Items', description: 'Table of items' } },
+)
+
+export default ItemsTable
 </example>
 
 <example>
@@ -307,51 +323,40 @@ RefLinkKind fields are used to create references between tables. They store the 
 
 #### Defining RefLinkKind fields in table schema
 
-<example fileName="tables/products.table" description="Table with RefLinkKind field">
-{
-  "name": "products",
-  "title": "Products", 
-  "description": "Products table with category reference",
-  "fields": [
-    {
-      "name": "title",
-      "kind": "StringKind",
-      "title": "Product title"
-    },
-    {
-      "name": "category",
-      "kind": "RefLinkKind",
-      "targetTablePath": "tables/categories.table",
-      "title": "Category"
-    },
-    {
-      "name": "price",
-      "kind": "MoneyKind", 
-      "title": "Price"
-    }
-  ]
-}
+<example fileName="tables/products.table.ts" description="Table with RefLinkKind field">
+import { Heap } from '@app/heap'
+
+export const ProductsTable = Heap.Table(
+  't_products_R7Wm',
+  {
+    title: Heap.Optional(Heap.String({ customMeta: { title: 'Product title' } })),
+    category: Heap.Optional(
+      Heap.RefLink('t_categories_R7Wn', { customMeta: { title: 'Category' } }),
+    ),
+    price: Heap.Optional(Heap.Money({ customMeta: { title: 'Price' } })),
+  },
+  { customMeta: { title: 'Products', description: 'Products table with category reference' } },
+)
+
+export default ProductsTable
 </example>
 
-<example fileName="tables/categories.table" description="Referenced table">
-{
-  "name": "categories",
-  "title": "Categories",
-  "description": "Product categories table", 
-  "fields": [
-    {
-      "name": "name",
-      "kind": "StringKind",
-      "title": "Category name"
-    },
-    {
-      "name": "description", 
-      "kind": "StringKind",
-      "title": "Category description"
-    }
-  ]
-}
+<example fileName="tables/categories.table.ts" description="Referenced table">
+import { Heap } from '@app/heap'
+
+export const CategoriesTable = Heap.Table(
+  't_categories_R7Wn',
+  {
+    name: Heap.Optional(Heap.String({ customMeta: { title: 'Category name' } })),
+    description: Heap.Optional(Heap.String({ customMeta: { title: 'Category description' } })),
+  },
+  { customMeta: { title: 'Categories', description: 'Product categories table' } },
+)
+
+export default CategoriesTable
 </example>
+
+Note: \`RefLink\` takes the **table's unique name** (the first argument of \`Heap.Table()\` in the referenced table — e.g. \`'t_categories_R7Wn'\`), NOT a file path. The table is found at runtime by that registered name.
 
 #### Working with RefLinkKind fields
 
@@ -712,29 +717,20 @@ export const apiUpdateUserRoute = app.post('/')
 UserRefLinkKind fields in tables store user ID and allow creating relationships between records and system users.
 When retrieving a table instance, the UserRefLinkKind field will contain a special runtime class (which has an id key) that allows getting a SmartUser object using the built-in asynchronous .get(ctx) method.
 
-<example fileName="tables/orders.table" description="Table with user field">
-{
-  "name": "orders", 
-  "title": "Orders",
-  "description": "Orders table with user binding",
-  "fields": [
-    {
-      "name": "title",
-      "kind": "StringKind", 
-      "title": "Order title"
-    },
-    {
-      "name": "customer",
-      "kind": "UserRefLinkKind",
-      "title": "Customer"
-    },
-    {
-      "name": "assignedTo", 
-      "kind": "UserRefLinkKind",
-      "title": "Assigned to"
-    }
-  ]
-}
+<example fileName="tables/orders.table.ts" description="Table with user field">
+import { Heap } from '@app/heap'
+
+export const OrdersTable = Heap.Table(
+  't_orders_Z8Hu',
+  {
+    title: Heap.Optional(Heap.String({ customMeta: { title: 'Order title' } })),
+    customer: Heap.Optional(Heap.UserRefLink({ customMeta: { title: 'Customer' } })),
+    assignedTo: Heap.Optional(Heap.UserRefLink({ customMeta: { title: 'Assigned to' } })),
+  },
+  { customMeta: { title: 'Orders', description: 'Orders table with user binding' } },
+)
+
+export default OrdersTable
 </example>
 
 <example filename="api/orders/create.ts" description="Working with UserRefLinkKind fields">

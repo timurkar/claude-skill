@@ -3,3 +3,4 @@
 node_modules/
 chatium-sync-skill.zip
 .chatium/
+_internal/

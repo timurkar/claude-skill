@@ -2,10 +2,10 @@
 
 Chatium has ability to store structured data inside tables. That tables called "Heap Tables"
 
-These files stored inside \`tables\` directory. Any table need to have some uniq addition in the name, like G2AS in t_categories_G2AS
+These files stored inside \`tables\` directory. Table files MUST have the \`.table.ts\` extension (e.g. \`tables/categories.table.ts\`). Any table need to have some uniq addition in the name, like G2AS in t_categories_G2AS
 
 For example, there are two tables (categories and items) and link between them to demonstrate all types of items:
-<example fileName="tables/categories.ts">
+<example fileName="tables/categories.table.ts">
 import { Heap } from '@app/heap'
 
 export const CategoriesTable = Heap.Table(
@@ -30,7 +30,7 @@ export type CategoriesTableRowJson = typeof CategoriesTable.JsonT
 
 </example>
 
-<example fileName="tables/items.ts">
+<example fileName="tables/items.table.ts">
 import { Heap } from '@app/heap'
 
 export const ItemTable = Heap.Table(
@@ -177,3 +177,22 @@ Embeddings-based search named "Semantic search" in Chatium
 Enable searchable behavior for all useful data - names, descriptions, titles, and so on, depending on data stored in table.
 
 If you need to seed table with some data - use code execution tool for this.
+
+## CRUD operations (backend only)
+
+Import the table (default export) into an api/route file, then use it via `ctx`:
+
+- Create: `const row = await MyTable.create(ctx, { field: value, ... })` — returns the created row (with `.id`).
+- Read all: `const rows = await MyTable.findAll(ctx, {})` — optional `{ order: [{ createdAt: 'desc' }] }`.
+- Delete: `await MyTable.delete(ctx, id)`.
+
+Every row also has system fields `id`, `createdAt`, `updatedAt`. **`createdAt` / `updatedAt` are `Date` objects, not strings** — sort them with `.getTime()` (e.g. `rows.sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())`), never `String.localeCompare` (that throws `localeCompare is not a function` at runtime).
+
+Value formats when creating a row:
+- String / Number / Boolean: the raw value.
+- Money: `new Money(amount, 'RUB')` — `import { Money } from "@app/heap"`; amount is in major units (`new Money(1800,'RUB')` renders `1 800,00 ₽`). Read back with `row.price?.format(ctx)`.
+- Enum: the string key, e.g. `status: 'available'`.
+- DateTime: a JS `Date`, e.g. `publishedAt: new Date()`.
+- RefLink: the referenced row's **id string**, e.g. `category: someCategoryRow.id`.
+- UserRefLink: a user id (omit if optional — hard to seed generically).
+

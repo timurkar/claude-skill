@@ -1,26 +1,26 @@
-## Authorization and users
+## Авторизация и пользователи
 
-For authorization, do not use cookies and sessions,
-and do not use redirects.
+Для авторизации - не используй cookie и сессию, 
+не используй редиректы
 
-If the user asks for an authorization page or a profile page, it is best to create
-a separate file like profile.tsx with their profile page.
-You can use the same page for authorization.
+Если пользователь просит сделать страницу авторизации или сделать профиль - лучше всего сделать
+отдельный файл типа profile.tsx, в котором сделать страницу его профиль
+Эту-же страницу можно использовать для авторизации
 
-Use the methods requireRealUser, requireAccountRole.
+Используй методы requireRealUser, requireAccountRole
 
-There are 3 system roles in an account: Admin, Staff, User.
-Admin includes Staff and User.
-Staff includes User.
-User is a regular user.
+Системных ролей в аккаунте 3: Admin, Staff, User
+Admin - включает в себя Staff и User
+Staff - включает в себя User
+User - обычный пользователь
 
-To check for staff role: ctx.user.is('Staff')
-To check for admin role: ctx.user.is('Admin')
+Проверить на роль сотрудника можно через ctx.user.is('Staff')
+Проверить на роль админа можно через ctx.user.is('Admin')
 
-If only staff should have access, do this:
-<example>
+Если нужно сделать чтобы доступ имели только сотрудники - нужно сделать так
+<example filename="./staff.tsx">
 import { requireAccountRole } from '@app/auth'
-app.html('/staff', async(ctx,req) => {
+app.get('/', async(ctx,req) => {
   requireAccountRole(ctx, 'Staff')
   return <body>
     Page for staff: {ctx.user.displayName}
@@ -28,11 +28,11 @@ app.html('/staff', async(ctx,req) => {
 })
 </example>
 
-If only administrators should have access, do this:
-<example>
+Если нужно сделать чтобы доступ имели только администраторы - нужно сделать так
+<example filename="./admin.tsx">
 import { requireAccountRole } from '@app/auth'
 
-app.html('/admin', async(ctx,req) => {
+app.get('/', async(ctx,req) => {
   requireAccountRole(ctx, 'Admin')
   return <body>
     Page for admin: {ctx.user.displayName}
@@ -40,11 +40,11 @@ app.html('/admin', async(ctx,req) => {
 })
 </example>
 
-If only signed-in users should have access, do this:
-<example>
+Если нужно сделать чтобы доступ имели только авторизованные пользователи - нужно сделать так
+<example filename="./profile.tsx">
 import { requireRealUser } from '@app/auth'
 
-app.html('/', async(ctx,req) => {
+app.get('/', async(ctx,req) => {
   requireRealUser(ctx)
   return <body>
     Page for authorized user: {ctx.user.displayName}
@@ -54,7 +54,7 @@ app.html('/', async(ctx,req) => {
 
 
 
-After authorization, ctx.user exposes these fields:
+После авторизации в переменной ctx.user доступны поля
 - id
 - displayName
 - firstName
@@ -68,18 +68,20 @@ After authorization, ctx.user exposes these fields:
 - accountRole (Admin, Staff, User)
 - type (Real, Guest)
 
-To block access to a page for unauthenticated users,
-simply add a requireRealUser call in its handler (on the backend).
+Если ты хочешь закрыть доступ к странице для неавторизованных пользователей
+просто добавь в ее хендлер (на бекенде) вызов requireRealUser
 
-DO NOT USE MADE-UP URLS LIKE /profile /login OR /logout —
-use only routes that exist in the application.
+НЕ ИСПОЛЬЗУЙ ПРИДУМАННЫХ ССЫЛОК ТИПА /profile /login или /logout - 
+используй только те роуты, которые есть в приложении
 
 
-<example>
+<example filename="./index.tsx">
 import {requireRealUser, requireAccountRole} from '@app/auth'
+import {adminRoute} from "./admin"
+import {profileRoute} from "./profile"
 
-// Page available to everyone
-app.html('/', async(ctx,req) => {
+// Страница, доступная всем
+app.get('/', async(ctx,req) => {
   return <body>
     Page for all users
     {  ctx.user && <div>
@@ -96,9 +98,11 @@ app.html('/', async(ctx,req) => {
     </div>}
   </body>
 })
+</example>
 
-// Page that requires sign-in
-const profileRoute = app.html('/profile', async(ctx,req) => {
+<example filename="./profile.tsx">
+// Страница, требующая авторизацию
+const profileRoute = app.get('/', async(ctx,req) => {
   requireRealUser(ctx)
   return <body>
     Page for authorized user {ctx.user.displayName}
@@ -110,9 +114,11 @@ const profileRoute = app.html('/profile', async(ctx,req) => {
     </div>}
   </body>
 })
+</example>
 
-// Admin area
-const adminRoute = app.html('/admin', async(ctx,req) => {
+<example filename="./admin.tsx">
+// Админка
+const adminRoute = app.get('/', async(ctx,req) => {
   requireAccountRole(ctx, 'Admin')
   return <body>
     Page for admin: {ctx.user.displayName}
@@ -120,18 +126,18 @@ const adminRoute = app.html('/admin', async(ctx,req) => {
 })
 </example>
 
-If you build a profile form, always allow editing first and last name.
+Если делаешь форму профиля - обязательно сделай там возможность редактировать имя и фамилию
 
-Do not implement avatar editing for now.
+Редактирование аватара пока не делай
 
-You can update firstName and lastName via updateUser.
-You can update other user fields via ctx.user?.updateExtendedInfo.
-phone and email cannot be updated; they are system fields.
+Поля firstName и lastName ты можешь обновлять через метод updateUser
+Остальные поля пользователя ты можешь обновлять через метод ctx.user?.updateExtendedInfo
+phone и email обновлять нельзя, это системные поля
 
-Important: updateUser and updateExtendedInfo are server-side. Call them only from backend code.
+Важно. Методы updateUser и updateExtendedInfo - серверные. Их можно вызывать только в бекенд-коде.
 
 
-<example>
+<example filename="./api/profile/update.ts">
 import { updateUser } from '@app/users'
 
 async function updateUserData(ctx) {
@@ -141,18 +147,18 @@ async function updateUserData(ctx) {
   })
   await ctx.user.updateExtendedInfo(ctx, {
     gender: 'male',
-    birthday: '1985-20-08',
+    birthday: '1985-08-20',
     imageHash: hash,
   })
 }
 </example>
 
 
-If you need user fields that are not built into the system,
-for example bio or a role inside a specific project, create a user profiles table.
-Do not put system fields in that table, such as id, displayName, firstName, lastName, gender, birthday, confirmedPhone, confirmedEmail, imageUrl, accountRole, type.
+Если нужны поля пользователя, которых нет в системе, 
+например, bio или его роль внутри конкретного проекта, то создай таблицу профилей пользователей
+Не размещай в этой таблице поля, которые есть в системе, такие как id, displayName, firstName, lastName, gender, birthday, confirmedPhone, confirmedEmail, imageUrl, accountRole, type
 
-<example>
+<example filename="./api/profile/save.ts">
   /**
    * Table with fields
    * userId string // ctx.user.id
@@ -179,9 +185,9 @@ Do not put system fields in that table, such as id, displayName, firstName, last
     })
 </example>
 
-How to load the user profile:
+Как получить профиль пользователя:
 
-<example>
+<example filename="./api/profile/get.ts">
   app.get('/', async(ctx, req) => {
     requireRealUser(ctx)
     const profile = await getProfile(ctx)
@@ -189,13 +195,13 @@ How to load the user profile:
   })
 </example>
 
-In both Vue and backend handlers, ctx.user is available.
-You do not need to stringify it or pass it separately.
+И в vue и в бекенд-методах будет доступен ctx.user
+Его не нужно делать stringify и отдельно передавать
 
-### Tables linked to a user
-To define a table linked to a user, add a userId field.
+### Таблицы, связанные с пользователем
+Чтобы завести таблицу, связаную с пользователем - добавь в нее поле userId
 
-<example fileName="tables/deals.table.ts">
+<example filename="./tables/deals.table.ts">
   /**
    * Table with fields
    * userId: string // ctx.user.id
@@ -206,7 +212,7 @@ To define a table linked to a user, add a userId field.
   import Deals from "../tables/deals.table"
 </example>
 
-<example fileName="api/createDeal.ts">
+<example filename="./api/createDeal.ts">
   import { requireAnyUser } from '@app/auth'
   import Deals from "../tables/deals.table"
 
@@ -216,8 +222,8 @@ To define a table linked to a user, add a userId field.
       totalCost: s.number(),
     }))
     .handle(async(ctx, req) => {
-      // If you want even an unauthenticated user to be able to create a deal,
-      // call requireAnyUser
+      // Если ты хочешь, чтобы даже неавторизованный пользователь мог создать сделку,
+      // вызови requireAnyUser
 
       const user = await requireAnyUser(ctx)
       const deal = await Deals.create(ctx, {
@@ -229,12 +235,12 @@ To define a table linked to a user, add a userId field.
     })
 </example>
 
-<example fileName="api/getUserDeals.ts">
+<example filename="./api/getUserDeals.ts">
   import Deals from "../tables/deals.table"
 
-  // If you are only reading data,
-  // do not use requireRealUser or requireAnyUser.
-  // Use ONLY ctx.user.
+  // Если ты только получаешь данные
+  // не используй requireRealUser или requireAnyUser
+  // Используй ТОЛЬКО ctx.user
   app.get('/', async(ctx, req) => {
     if ( ! ctx.user ) {
       return []
@@ -248,19 +254,19 @@ To define a table linked to a user, add a userId field.
   })
 </example>
 
-To link to sign-in from anywhere, use:
+Чтобы сделать ссылку на авторизацию в произвольном месте - используй ссылку
 /s/auth/signin?back={backUrlWithoutDomain}
-where backUrlWithoutDomain is the path to return to after sign-in
-without the domain, for example /profile.
-Never use just "/" for back. If unsure, use the current page path (still without the domain!).
+где backUrlWithoutDomain - это адрес, на который нужно вернуться после авторизации
+без домена, например /profile
+Никогда не используй в back просто слеш. Если не знаешь что - используй адрес текущей страницы (но без домена!)
 
-To sign out, from client code send a POST request to /s/auth/sign-out.
-IMPORTANT: do not navigate to that URL alone — perform a POST request.
+Для того чтобы выйти из аккаунта - нужно из клиентского кода сделать post-запрос на адрес /s/auth/sign-out 
+ВАЖНО: не просто отправить на этот адрес, а сделать post-запрос
 
 
-If you need to restrict access not by role but by workspace access,
-use checkFilePermissions.
-<example>
+Если нужно ограничнить доступ не по роли, а по тем кто имеет доступ к воркспейсу - 
+используй метод checkFilePermissions
+<example filename="./protected.tsx">
 import { checkFilePermissions } from "@app/auth"
 
 app.use(checkFilePermissions()).html('/', async(ctx, req) => {
